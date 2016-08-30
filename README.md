@@ -91,9 +91,14 @@ Activity的dispatchTouchEvent 具体由Window来完成的, Window传给DecorView
 
 Andriod中所有的视图都是通过Window来呈现的,不管是Activity,Dialog还是Toast,他们都是附加在Window上的,因此Window是View的实际管理者.
 
+Window是一个抽象概念,每一个Window都对应这一个View和一个ViewRootImpl,Window和View通过ViewRootImpl来建立联系. 
+
 WindowManager添加一个View的过程:
-1. WindowManagerImpl -> WindowManagerGlobal -> addView
-2. 创建ViewRootImpl -> setView()方法更新View -> WindowSession -> WindowManagerService处理．
+1. WindowManagerImpl -> WindowManagerGlobal -> addView -> 创建ViewRootImpl -> setView()方法更新View -> WindowSession (IPC) -> WindowManagerService处理．
+
+Activity的Window创建过程:
+ActivityThread执行performLaunchActivity()操作,然后会回调到Actaivity.attach方法中,创建window(new PhoneWindow()).
+在setContentView(),创建Decor视图,并将视图加入到Decor视图中,最后在makeVisible()时,将Decor视图加入到Window上.
 
 # 内存泄露
 
@@ -102,6 +107,6 @@ WindowManager添加一个View的过程:
 3. 内部类引用外部类对象:在Activity内部,匿名内部类和非静态内部类都会持有Activity的引用对象,当匿名内部类和非静态内部类生命周期不确定时,就很容一产生内存泄露.以及为非静态内部类创建静态实例,也会造成内存泄露.解决方法:尽量创建静态内部类.
 1. 静态变量:错误的使用静态变量,例如使用静态变量引用了Context
 2. 监听器(Listener)没有被取消,由于在Activity内部的匿名内部类引用了Activity,如果监听器没有被取消,就很容易内存泄露.
-4. 单例模式:很多情况下都会传入Context以方便使用,由于是单例的生命周期和应用一致,并且创建单例时传入Activity作为Context,导致单例引用了Acitivty,无法被释放,发生内存泄露.解决方法:context.getApplicationContext();
 5. Handler:非静态的Handler内部类引用了Acitivity对象,当发送消息时Handler和Looper以及MessageQueue关联在一起,当消息没有被处理时,就会一直持有Handler,而Handler持有Activity,也就引起了内存泄露.解决:静态内部类+软或弱引用.
+4. 单例模式:很多情况下都会传入Context以方便使用,由于是单例的生命周期和应用一致,并且创建单例时传入Activity作为Context,导致单例引用了Acitivty,无法被释放,发生内存泄露.解决方法:context.getApplicationContext();
 6. 资源没有被释放:Bitmap.recycler();
