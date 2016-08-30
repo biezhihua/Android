@@ -89,7 +89,7 @@ Activity的dispatchTouchEvent 具体由Window来完成的, Window传给DecorView
 
 # 理解Window和WindowManager
 
-Andriod中所有的视图都是通过Window来呈现的,不管是Activity,Dialog还是Toast,他们都是附加在Window上的,因此Window是View的实际管理者.
+Android 中所有的视图都是通过Window来呈现的,不管是Activity,Dialog还是Toast,他们都是附加在Window上的,因此Window是View的实际管理者.
 
 Window是一个抽象概念,每一个Window都对应这一个View和一个ViewRootImpl,Window和View通过ViewRootImpl来建立联系. 
 
@@ -97,8 +97,28 @@ WindowManager添加一个View的过程:
 1. WindowManagerImpl -> WindowManagerGlobal -> addView -> 创建ViewRootImpl -> setView()方法更新View -> WindowSession (IPC) -> WindowManagerService处理．
 
 Activity的Window创建过程:
-ActivityThread执行performLaunchActivity()操作,然后会回调到Actaivity.attach方法中,创建window(new PhoneWindow()).
+ActivityThread执行performLaunchActivity()操作,然后会回调到Activity.attach方法中,创建window(new PhoneWindow()).
 在setContentView(),创建Decor视图,并将视图加入到Decor视图中,最后在makeVisible()时,将Decor视图加入到Window上.
+
+# ANR
+
+程序无响应,根本原因是在Ui界面进行了太多耗时操作.
+
+android规定Activity超过5秒钟无响应会出现ANR,在Service中10秒钟无响应会出现ANR.
+
+如何分析出处?分析traces文件.
+
+如何解决,将所有耗时操作放入到工作线程.
+1. Thread+Handler,这样开销比较大
+2. AsyncTask虽然轻量,但是使用时有非常多需要注意的点,1.串行并行版本2.cancel不太好用3.内存泄露
+3. RxJava
+
+
+# OOM 内存溢出
+
+使用了太多的内存,而没有释放.加载了大图片.
+
+
 
 # 内存泄露
 
@@ -110,3 +130,7 @@ ActivityThread执行performLaunchActivity()操作,然后会回调到Actaivity.at
 5. Handler:非静态的Handler内部类引用了Acitivity对象,当发送消息时Handler和Looper以及MessageQueue关联在一起,当消息没有被处理时,就会一直持有Handler,而Handler持有Activity,也就引起了内存泄露.解决:静态内部类+软或弱引用.
 4. 单例模式:很多情况下都会传入Context以方便使用,由于是单例的生命周期和应用一致,并且创建单例时传入Activity作为Context,导致单例引用了Acitivty,无法被释放,发生内存泄露.解决方法:context.getApplicationContext();
 6. 资源没有被释放:Bitmap.recycler();
+
+# 优化
+
+布局优化/线程优化/绘制优化/内存泄露优化/OOM优化/响应速度优化/
