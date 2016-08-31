@@ -58,6 +58,30 @@ Binder是Android的一个类,它实现了IBinder接口.从IPC角度来说,Binder
 |**ContentProvider**|在数据源访问方面功能强大，支持一对多并发数据共享，可通过Call方法扩展其他操作|可以理解为受约束的AIDL，只要提供数据源的CRUD操作|一对多进程间的数据共享
 |**Socket**|功能强大，可以通过网络传输字节流，支持一对多并发实时通讯|实现细节稍微麻烦，不支持直接RPC|网络数据交换
 
+# 消息机制
+
+主要涉及到Handler,Message,MessageQueue,Looper
+
+Android的消息机制主要是线程间通信使用的.平常的用途主要在于更新UI.
+
+Looper是一个消息循环,不断在MessageQueue队列中取出消息,进行分发,Looper和MessageQueue是一一对应的,在一个线程中只能有一个Looper和MessageQueue,使用ThreadLocal来存储.
+
+而Handler则可以有多个实例,在创建Handler对象时,会获取当前线程的Looper和MessageQueue,主要用途是用于发送消息到队列中.
+
+Looper.looper()之后,不断在MessageQueue中取出消息,然后进行dispatchMessage(),最后在Handler的handleMessage()处理消息结果.
+
+我们所说的主线程,在其内部也开启了一个Looper循环.在ActivityThread.main()方法中,通过Looper.prepareMainLooper()和Looper.loop()开启了消息循环.其loop()内部是一个死循环,
+
+其中开启了一个Binder线程,用于接收系统服务的消息.
+
+当有消息时,会从MessageQueue.next()方法中取出消息,如果没有消息,则会阻塞在next()方法上,但是这种阻塞不会造成主线程卡死,之所以不会卡死,
+
+是因为在没有消息时,主线程释放了CPU资源,进入了休眠状态,直到下一个消息或事物发生时,通过往pipe管道写入数据来唤醒主线程工作.
+
+这里采用epoll机制,是一种IO多路复用的机制,同时监控多个描述符,当描述符就绪,则立刻通知相应程序进行读写操作,本质是同步IO,读写是阻塞的.
+
+所以说,主线程大多数时候是处于休眠状态的,并不会消耗大量CPU资源.
+
 # View动画的方式
 
 1. scrollTo/scrollBy,注意是对view内容的滑动
