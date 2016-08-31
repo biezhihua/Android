@@ -88,6 +88,51 @@ Looper.looper()之后,不断在MessageQueue中取出消息,然后进行dispatchM
 2. 动画
 3. 改变布局参数
 
+# 测量流程,布局流程,和绘制流程
+
+# android的invalidate()和postInvalidate()的区别
+
+Android中实现View更新的又两组方法,一组是invalidate(),另一组是postInvalidate(),其中前者是在UI线程中自身中使用的,而后者是在非UI线程中使用的.
+
+为什么这样呢?之所以不能在线程中直接使用invalidate(),因为它违背了单线程模型,android的UI线程并不是线程安全的,并且这些更新UI的操作必须的UI线程操作.
+
+# Android的单线程模型
+
+当第一个程序第一次启动的时候,Android会同时启动一个对应的主线程(Main Thread),主线程主要负责处理与UI相关的事件,
+如:用户的按键事件,用户接触屏幕的事件,以及屏幕绘制事件,并把相关的事件分发到对应的组件进行处理.
+所以主线程又通常被叫做UI线程.
+
+在开发Android应用时必须遵守单线程模型的原则:Android UI操作并不是线程安全的并且这些操作必须在UI线程中执行.
+
+由于UI线程负责事件的监听和绘制,因此,必须保证UI线程能够随时响应用户的需求,UI线程里的操作应该像中断操作那样短小,费时间的操作需要另开线程,否则UI线程超过5s没有响应用户请求,会弹出对话框提醒用户终止应用程序.
+
+如果在新开的线程中需要对UI线程进行更新,就可能违反单线程模型,因此Android采用消息机制保证线程间通信.
+
+MessageQueue Looper Handler
+
+# AttributeSet是获取自定义属性的.context.obtain
+
+# View中的常用方法
+
+
+|Category|	Methods|	Description|
+|---|---|---|
+|Creation|	Constructors	|There is a form of the constructor that are called when the view is created from code and a form that is called when the view is inflated from a layout file. The second form should parse and apply any attributes defined in the layout file.|
+| |onFinishInflate()	|Called after a view and all of its children has been inflated from XML.|
+|Layout|	onMeasure(int, int)	|Called to determine the size requirements for this view and all of its children.|
+| |onLayout(boolean, int, int, int, int)	|Called when this view should assign a size and position to all of its children.|
+| |onSizeChanged(int, int, int, int)	|Called when the size of this view has changed.||
+|Drawing|	onDraw(android.graphics.Canvas)	|Called when the view should render its content.
+|Event processing|	onKeyDown(int, KeyEvent)|	Called when a new hardware key event occurs.|
+| |onKeyUp(int, KeyEvent)	|Called when a hardware key up event occurs.|
+| |onTrackballEvent(MotionEvent)	|Called when a trackball motion event occurs.
+| |onTouchEvent(MotionEvent)	|Called when a touch screen motion event occurs.|
+|Focus	|onFocusChanged(boolean, int, android.graphics.Rect)	|Called when the view gains or loses focus.||
+| |onWindowFocusChanged(boolean)	|Called when the window containing the view gains or loses focus.
+|Attaching	|onAttachedToWindow()	|Called when the view is attached to a window.|
+| |onDetachedFromWindow()	|Called when the view is detached from its window.|
+| |onWindowVisibilityChanged(int)	|Called when the visibility of the window containing the view has changed.|
+
 # View事件分发机制
 
 1. dispatchTouchEvent(MotionEvent ev)
