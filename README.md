@@ -90,6 +90,22 @@ Looper.looper()之后,不断在MessageQueue中取出消息,然后进行dispatchM
 
 # 测量流程,布局流程,和绘制流程
 
+ViewRootImpl的performTraversals开始,
+
+ViewGroup
+
+performMeasure -> measure -> onMeasure
+
+performLayout -> layout -> onLayout
+
+performDraw -> draw -> onDraw
+
+performTraversals会依次调用performMeasure,performLayout和performDraw,这三个方法分别完成顶级View的measure,layout,draw这三大流程.
+
+performMeasure中会调用measure方法,measure()方法又会调用onMeasure()方法,在onMeasure()方法中则会对所有子元素进行measure过程,这时measure流程就从父容器传递到
+子容器中了,这样就完成了一次measure过程,接着子元素重复父元素的measure过程,如此反复就完成了整个View树的遍历.
+
+
 # android的invalidate()和postInvalidate()的区别
 
 Android中实现View更新的又两组方法,一组是invalidate(),另一组是postInvalidate(),其中前者是在UI线程中自身中使用的,而后者是在非UI线程中使用的.
