@@ -55,8 +55,8 @@ Binder是Android的一个类,它实现了IBinder接口.从IPC角度来说,Binder
 | **文件共享** | 简单易用 | 不适合高并发场景，并且无法做到进程间的即时通讯 | 无并发访问情形，交换简单的数据实时性不高的场景
 | **AIDL** | 功能强大，支持一对多并发通讯，支持实时通讯 | 适用稍复杂，需要处理好线程同步 | 一对多通讯且有RPC(远程过程调用协议)需求
 | **Messager**|功能一般，支持一对多串行通信，支持实时通讯|不能很好的处理高并发情形，不支持RPC，数据通过Message进行传输，因此只能传输Bundle支持的数据类型|低并发的一对多即时通讯，无RPC需求，或者无需要返回结果的RPC需求
-|**ContentProvider**|在数据源访问方面功能强大，支持一对多并发数据共享，可通过Call方法扩展其他操作|可以理解为受约束的AIDL，只要提供数据源的CRUD操作|一对多进程间的数据共享
-|**Socket**|功能强大，可以通过网络传输字节流，支持一对多并发实时通讯|实现细节稍微麻烦，不支持直接RPC|网络数据交换
+| **ContentProvider**|在数据源访问方面功能强大，支持一对多并发数据共享，可通过Call方法扩展其他操作|可以理解为受约束的AIDL，只要提供数据源的CRUD操作|一对多进程间的数据共享
+| **Socket**|功能强大，可以通过网络传输字节流，支持一对多并发实时通讯|实现细节稍微麻烦，不支持直接RPC|网络数据交换
 
 # 消息机制
 
@@ -105,6 +105,12 @@ performTraversals会依次调用performMeasure,performLayout和performDraw,这�
 performMeasure中会调用measure方法,measure()方法又会调用onMeasure()方法,在onMeasure()方法中则会对所有子元素进行measure过程,这时measure流程就从父容器传递到
 子容器中了,这样就完成了一次measure过程,接着子元素重复父元素的measure过程,如此反复就完成了整个View树的遍历.
 
+在View测量的时候,系统会将LayoutParams在父容器的约束下转换成对应的MeasureSpec,然后再根据这个MeasureSpece来决定的,在根据这个MeasureSpec来确定View测量后的宽高.
+
+对于DecorView其MeasureSpec由窗口的尺寸和气自身的LayoutParams来公共决定(getRootMeasureSpec()),对于普通的View由父亲的MeasureSpec和自身的LayoutParams来共同决定(getChildMeasureSpec()).
+
+以父亲是WRAP_CONTENT为例
+:如果孩子的布局大小是准确的尺寸,则模式是精准的.如果孩子的布局大小是MATCH_PARENT,则尺寸是父亲的大小,且模式是最大的.如果孩子的布局大小是WRAP_CONTENT的,则尺寸是父亲的大小,切成模式是最大的.
 
 # android的invalidate()和postInvalidate()的区别
 
@@ -219,3 +225,12 @@ android规定Activity超过5秒钟无响应会出现ANR,在Service中10秒钟无
 # 优化
 
 布局优化/线程优化/绘制优化/内存泄露优化/OOM优化/响应速度优化/
+
+# FragmentPagerAdapter与FragmentStatePagerAdatper
+
+主要区别在于fragment是否销毁.
+FragmentPagerAdapter对于不在需要的framgent,选择调用detach()方法,仅销毁视图,并不会销毁fragment实例.
+FragmentStatePagerAdapter,会销毁不在需要的fragment.
+
+FrragmentStatePagerAdapter更节省内存,但是销毁和创建要消耗时间.
+在页面不多的情况下,使用FragmentPagerAdapter,在较多的情况下使用FragmentStatePagerAdapter
